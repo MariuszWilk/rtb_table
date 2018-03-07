@@ -2,10 +2,55 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
+  overflow: visible;
 }
 
 .App {
   display: flex;
   justify-content: center;
   margin-top: 30px;
+  overflow: visible;
+}
+
+thead {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+
+thead tr td {
+  background-color: #d8ecf3;
+  height: 50px;
+  border-bottom: 1px solid #d8ecf3;
+}
+
+tbody {
+  margin-bottom: 30px;
+}
+
+tbody tr td {
+  height: 30px;
+  border-bottom: 1px solid #ccc;
+}
+
+tfoot tr {
+  height: 35px;
+}
+
+.showColumn {
+  cursor: pointer;
+  color: #4169E1;
+}
+
+.modalTitle {
+  width: 100px;
+  display: inline-block;
+  background-color: #d8ecf3;
+  padding: 5px;
+  margin-right: 10px;
+  padding-left: 10px;
+}
+
+.textCell {
+  text-align: left;
 }

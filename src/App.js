@@ -13,39 +13,14 @@ W tabeli wyświetlane jest pierwsze 100 wierszy, kolejne dobierane są podczas s
 
 import React, { Component } from 'react'
 import './App.css';
-import { Select, Input, Modal } from 'antd';
+import { Select, Input, Modal, Button } from 'antd';
 import '../node_modules/antd/dist/antd.css';
+
 const Option = Select.Option;
-
-const rand = (range) => {
-  return Math.round(Math.random()*(range-1)) + 1
-}
-const letters = 'abc def ghi jkl mno pqr stu vwx yz'
-const dataPoints = 50000
-const loadNr = 100
-const maxTimesLoaded = dataPoints / loadNr
-let timesLoaded = 0
-
-const getData = () => {
-  const randomData = () => {
-    let data = []
-    for (let i=1; i<=100; i++) {
-      data.push({
-        date: `${1990 + rand(30)}-${String(rand(12)).padStart(2, 0)}-${String(rand(28)).padStart(2, 0)}`,
-        group: ['a', 'b', 'c', 'd', 'e'][rand(5)-1],
-        text: letters.split('').filter(() => rand(2)-1).join('')
-      })
-    }
-    timesLoaded++
-    return timesLoaded >= maxTimesLoaded ? [] : data
-  }
-
-  return randomData()
-}
 
 class App extends Component {
   state = {
-    data: getData(),
+    data: this.props.getData(),
     loader: true,
     groups: [],
     text: '',
@@ -56,57 +31,44 @@ class App extends Component {
     window.addEventListener("scroll", this.handleScroll);
   }
 
+  loadData = () => {
+    const data = this.props.getData()
+    if (data.length) {
+      this.setState({
+        data: [...this.state.data, ...data]
+      })
+    } else {
+      this.setState({
+        loader: false
+      })
+    }
+  }
+
   handleScroll = () => {
-    if (window.innerHeight + window.pageYOffset > (document.body.scrollHeight - 70)) {
-      const data = getData()
-      if (data.length) {
-        this.setState({
-          data: [...this.state.data, ...getData()]
-        })
-      } else {
-        this.setState({
-          loader: false
-        })
-      }
+    if (window.innerHeight + window.pageYOffset > (document.body.scrollHeight - 80)) {
+      this.loadData()
     }
   }
 
   filterData = (data) => {
     return data.filter(row => {
-      return (this.state.groups.length === 0 || this.state.groups.includes(row.group)) && (this.state.text.length === 0 || row.text.includes(this.state.text))
+      const { groups, text } = this.state
+      const groupInFilter = groups.length === 0 || groups.includes(row.group)
+      const textInFilter = text.length === 0 || row.text.includes(text)
+      return groupInFilter && textInFilter
     })
   }
 
-  handleGroupSelect = (groups) => {
-    console.log('groups', groups);
-    this.setState({
-      groups: groups
-    })
-  }
-
-  handleInputChange = (e) => {
-    this.setState({
-      text: e.target.value
-    })
-  }
-
-  handleCancel = () => {
-    this.setState({
-      modalData: null
-    })
-  }
-
-  setModalData = (d) => {
-    this.setState({
-      modalData: d
-    })
-  }
+  handleGroupSelect = (groups) => this.setState({groups: groups})
+  handleInputChange = (e) => this.setState({text: e.target.value})
+  handleCancel = () => this.setState({modalData: null})
+  setModalData = (d) => this.setState({modalData: d})
 
   render() {
     const { modalData } = this.state
     return (
       <div className='App'>
-        <table border={1} style={{width: '60%'}}>
+        <table style={{width: '45%'}}>
           <thead>
             <tr>
               <td>
@@ -114,7 +76,7 @@ class App extends Component {
               </td>
               <td>
                 <Select
-                  style={{ width: "17rem" }}
+                  style={{ width: '16rem' }}
                   allowClear
                   mode="multiple"
                   placeholder='Group'
@@ -129,7 +91,7 @@ class App extends Component {
               <td>
                 <Input
                   onChange={this.handleInputChange}
-                  style={{ width: "17rem" }}
+                  style={{ width: "100%" }}
                   placeholder='Text'
                 />
               </td>
@@ -137,37 +99,43 @@ class App extends Component {
             </tr>
            </thead>
 
-           {this.state.loader &&
-             <tfoot>
-              <tr>
-                 <td colSpan='4'>
-                  Loading...
-                 </td>
-              </tr>
-             </tfoot>
-           }
+           <tfoot>
+             <tr>
+               <td colSpan='4'>
+                  {this.state.loader &&
+                    <Button size='small' onClick={this.loadData}>Load more...</Button>
+                  }
+               </td>
+             </tr>
+           </tfoot>
 
-           <tbody>
+           <tbody border={1}>
             {this.filterData(this.state.data).map(d => {
               return (
                 <tr key={d.text + d.date}>
                   <td>{d.date}</td>
                   <td>{d.group}</td>
-                  <td>{d.text}</td>
-                  <td onClick={() => this.setModalData(d)}>show</td>
+                  <td className='textCell'>{d.text}</td>
+                  <td
+                    onClick={() => this.setModalData(d)}
+                    className='showColumn'
+                  >
+                    show
+                  </td>
                 </tr>
               )
             })}
-            <Modal
-              visible={!!modalData}
-              onCancel={this.handleCancel}
-              footer={null}
-            >
-              <p>{modalData && modalData.date}</p>
-              <p>{modalData && modalData.group}</p>
-              <p>{modalData && modalData.text}</p>
-            </Modal>
            </tbody>
+
+           <Modal
+             visible={!!modalData}
+             onCancel={this.handleCancel}
+             footer={null}
+           >
+             <p>{modalData && <span><div className='modalTitle'>Date: </div>  {modalData.date}</span>}</p>
+             <p>{modalData && <span><div className='modalTitle'>Group:</div> {modalData.group}</span>}</p>
+             <p>{modalData && <span><div className='modalTitle'>Text: </div>  {modalData.text}</span>}</p>
+           </Modal>
         </table>
       </div>
     );
